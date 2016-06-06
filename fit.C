@@ -40,7 +40,7 @@ void fit(
     // Set up fit parameters
     Double_t initPars[8] = {initNorm, initLambda, initRo, initRs, initRl, initRos, initRol, initRsl};
     Double_t initRange[8] = {0.1, 0.1, 3, 3, 3, 1, 0, 0};
-    TString parNames[8] = {"Normalization" , "Lambda" , "Rout Squared" , "Rside Squared" , "Rlong Squared" , "Routside Squared" , "Routlong Squared" , "Rsidelong Squared"};
+    TString parNames[8] = {"Normalization" , "Lambda", "RoutSquared", "RsideSquared", "RlongSquared", "RoutsideSquared", "RoutlongSquared", "RsidelongSquared"};
     tmFit->SetFCN(logLikelihood);
     for (Int_t i = 0; i <= 7; ++i) { tmFit->DefineParameter(i, parNames[i].Data(), initPars[i], initRange[i], 0, 0); }
 
@@ -56,10 +56,23 @@ void fit(
         tmFit->mnexcm("MIGRAD",arglist,0,ierflg);
 	}
 	while ( (ierflg != 0) && (fitLoop != 50) );
-    TCanvas* test = new TCanvas();
-    *contour = (TGraph*)(tmFit->Contour(5,0,1))->Clone("test");
-    // contour->Draw();
-    // test->Print("test.pdf");
+
+    // ---- Find Error Contours ---- //
+    Int_t n = 0;
+    Int_t nPoints = 10;
+    for (Int_t i = 0; i <= 6; i++)
+    {
+        for (Int_t j = i+1; j <= 7; j++)
+        {
+            TString cloneTitle = TString::Format("%s_%s", parNames[i].Data(), parNames[j].Data());
+
+            // Only make the contours if we actually tried to fit the values
+            if(initRange[i] && initRange[j]) {
+                contour[n] = (TGraph*)(tmFit->Contour(nPoints,i,j))->Clone(cloneTitle.Data());
+            }
+            n++;
+        }
+    }
 
 
 }

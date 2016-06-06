@@ -27,17 +27,18 @@
 declare -a resMult=(0.426443 0.424254 0.422858 0.420137 0.41072) # U - 0.0% to 0.5% - mult
 # declare -a resq2=(0.336164 0.336912 0.343711 0.349486 0.372916) # U - 0.0% to 0.5% - q2
 
-# directory=200GeVData/0to0x5PercZdc
 # directory=200GeVData/0to0x25PercZdc
-directory=193GeVData/0to0x25PercZdc
+# directory=200GeVData/0to0x5PercZdc
+# directory=193GeVData/0to0x25PercZdc
+directory=193GeVData/0to0x5PercZdc
 
 # tag=q2
 # q2OrMult=0
 tag=mult
 q2OrMult=1
 
-for((i=3; i <= 3; i++))
-# for((i=0; i <= 4; i++))
+# for((i=3; i <= 3; i++))
+for((i=0; i <= 4; i++))
 do
     inFile=$directory/UUFemto193_${tag}_$i.root
     correctedFile=$directory/UUFemto193_${tag}_${i}_Corrected.root

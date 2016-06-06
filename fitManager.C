@@ -32,7 +32,7 @@ void fitManager(
     TH3D* den;
     TH3D* coul;
     TH3D* fitNum;
-    TGraph* contour = 0;
+    TGraph* contour[28] = {0};
 
     readData(num,den,coul,inputfile.Data(),pm,ktBin,phiBin);
     coul->Divide(den);
@@ -44,7 +44,7 @@ void fitManager(
 
     //Do the fit
     TStopwatch* fitTimer = new TStopwatch();
-    fit(num, den, coul, nFitPars, fitRange, minuit, initNorm, initLambda, initRo, initRs, initRl, initRos, initRol, initRsl, &contour);
+    fit(num, den, coul, nFitPars, fitRange, minuit, initNorm, initLambda, initRo, initRs, initRl, initRos, initRol, initRsl, contour);
     cout << "\nFit took " << fitTimer->RealTime() << " seconds to finish.\n\n";
 
     for (Int_t i = 0; i <= 7; ++i) { minuit->GetParameter(i, fitPars[i], fitParErrors[i]); }
@@ -62,15 +62,15 @@ void fitManager(
     fitDirectory->cd();
     doProjections(num, fitNum, den, projectedCF, projectedFitCF, fitPars[0], projRange);
     minuit->Write("Minuit", 2);
+    for (Int_t i = 0; i <= 27; i++)
+    {
+        if(contour[i]) { contour[i]->Write(contour[i]->GetName(), 2); }
+    }
 
     // Save fit parameters to TGraphs
     Int_t phiLabels[8] = {0,22,45,67,90,112,135,157};
     gDirectory->cd("..");
     writeTGraphs(minuit, phiBin, phiLabels[phiBin]);
-    cout << contour << endl;
-    TCanvas* test = new TCanvas();
-    contour->Draw();
-    test->Print("test.pdf");
 
     outFile->Close();
     delete minuit;
