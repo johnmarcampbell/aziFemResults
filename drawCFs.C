@@ -6,8 +6,8 @@ Bool_t isLastIteration(Int_t deltaZdc, Int_t deltaMult, Int_t deltaPhi);
 void drawCFs()
 {
 
-    TString inFileName[2] = {"./193GeVData/UU193GeVFitResults.root", "./200GeVData/AuAu200GeVFitResults.root"};
-    TString outFileNameBase[4] = {"CFUUMultOut.pdf", "CFUUq2Out.pdf", "CFAuAuMultOut.pdf", "CFAuAuq2Out.pdf"};
+    TString inFileName[2] = {"./193GeVData/UU193GeVFitResults_WithRes.root", "./200GeVData/AuAu200GeVFitResults_WithRes.root"};
+    TString outFileNameBase[4] = {"CFUUMultOut_lamFixed.pdf", "CFUUq2Out.pdf", "CFAuAuMultOut.pdf", "CFAuAuq2Out.pdf"};
     TString directoryFormat[2] = {"zdc_%d/mult_%d/piCombined/phi_%d", "zdc_%d/q2_%d/piCombined/phi_%d"};
 
     makePdf(inFileName[0], outFileNameBase[0], directoryFormat[0]);
@@ -29,7 +29,7 @@ void  makePdf(TString inFileName, TString outFileNameBase, TString directoryForm
 
     TString outFileName;
     // Int_t nZdcBins = 1, nMultBins = 1, nPhiBins = 1;
-    Int_t nZdcBins = 2, nMultBins = 5, nPhiBins = 8;
+    Int_t nZdcBins = 1, nMultBins = 5, nPhiBins = 8;
     Bool_t firstIteration = kTRUE, lastIteration = kFALSE;
 
     for (Int_t iZdc = 0; iZdc <= (nZdcBins - 1); ++iZdc)
@@ -69,6 +69,7 @@ void  makePdf(TString inFileName, TString outFileNameBase, TString directoryForm
 TCanvas* makeCFCanvas(TFile* inFile, TString dirName, TString paveText)
 {
 
+    TH1::SetDefaultSumw2;
     inFile->cd(dirName.Data());
 
     TPaveText* pt = new TPaveText(0,0.9,0.4,1,"NDC");
@@ -77,7 +78,7 @@ TCanvas* makeCFCanvas(TFile* inFile, TString dirName, TString paveText)
 
     Float_t xLow = -.18, xHigh = .18;
     Float_t yLow = 0.95, yHigh = 1.5;
-    Float_t yLowRatio = 0.95, yHighRatio = 1.1;
+    Float_t yLowRatio = 0.8, yHighRatio = 1.2;
     Int_t canvasSize[2] = {1000, 700};
 
 

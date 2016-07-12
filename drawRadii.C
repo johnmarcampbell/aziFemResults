@@ -6,10 +6,20 @@ void getFComp(TGraphErrors* graph, TGraphErrors* compSin, TGraphErrors* compCos,
 void getFCompFit(TGraphErrors* graph, TGraphErrors* compSin, TGraphErrors* compCos, const Double_t offset = 0);
 
 void drawRadii(
-    // const TString inFileName = "./193GeVData/UU193GeVFitResults.root",
-    // const TString outFileName = "./193GeVData/UU193Eps.root"
-    const TString inFileName = "./200GeVData/AuAu200GeVFitResults.root",
-    const TString outFileName = "./200GeVData/AuAu200Eps.root"
+    // const TString inFileName = "./193GeVData/UU193GeVFitResults_smallFitRange.root",
+    // const TString outFileName = "./193GeVData/UU193Eps_smallFitRange.root"
+    // const TString inFileName = "./193GeVData/UU193GeVFitResults_WithRes.root",
+    // const TString outFileName = "./193GeVData/UU193Eps_WithRes.root"
+    // const TString inFileName = "./193GeVData/UU193GeVFitResults_noRes.root",
+    // const TString outFileName = "./193GeVData/UU193Eps_noRes.root"
+    // const TString inFileName = "./200GeVData/AuAu200GeVFitResults_smallFitRange.root",
+    // const TString outFileName = "./200GeVData/AuAu200Eps_smallFitRange.root"
+    const TString inFileName = "./200GeVData/AuAu200GeVFitResults_WithRes.root",
+    const TString outFileName = "./200GeVData/AuAu200Eps_WithRes.root"
+    // const TString inFileName = "./200GeVData/AuAu200GeVFitResults_noRes.root",
+    // const TString outFileName = "./200GeVData/AuAu200Eps_noRes.root"
+    // const TString inFileName = "./200GeVData/AuAu200GeVFitResults_withDistributions.root",
+    // const TString outFileName = "./200GeVData/AuAu200Eps_withDistributions.root"
     // const TString inFileName = "./193GeVData/UU193GeVFitResults_0to0x25.root",
     // const TString outFileName = "./193GeVData/UU193Eps.root"
     // const TString inFileName = "./200GeVData/AuAu200GeVFitResults_0to0x25.root",
@@ -48,6 +58,7 @@ void drawRadii(
        } 
     }
 
+    // const Int_t nZdcBins = 1;
     const Int_t nZdcBins = 2;
     const Int_t nQ2MultBins = 5;
 
@@ -80,11 +91,12 @@ void drawRadii(
                     radiiCanvas = makeRadiiCanvas(theDirectory, params[i], dirName.Data(), paveText);
                     for (Int_t iParams = 0; iParams <= 5; iParams++)
                     {
-                        if(iParams == 1) {getFCompFit(params[i][iParams],fCompsSin[i][iParams],fCompsCos[i][iParams]);}
                     }
 
                     for (Int_t iParams = 0; iParams <= 5; ++iParams)
                     {
+                        getFCompFit(params[i][iParams],fCompsSin[i][iParams],fCompsCos[i][iParams]);
+                        getFComp(params[i][iParams],fCompsSin[i][iParams],fCompsCos[i][iParams]);
                         Double_t* cos = fCompsCos[i][iParams]->GetY();
                         Double_t* sin = fCompsSin[i][iParams]->GetY();
                         f0[iParams]->SetPoint(i, i+1, cos[0]);
@@ -94,9 +106,10 @@ void drawRadii(
                         f2[iParams]->SetPointError(i, 0, fCompsCos[i][iParams]->GetErrorY(1));
                         f2[iParams]->SetTitle(params[i][iParams]->GetTitle());
 
+                        // Do epsF
                         if(iParams == 1)
                         {
-                            Double_t epsValue = 2*cos[1]/cos[0];
+                            Double_t epsValue = cos[1]/cos[0];
                             Double_t meanErr = fCompsCos[i][0]->GetErrorY(0);
                             Double_t ampErr = fCompsCos[i][1]->GetErrorY(1);
                             Double_t epsErr = epsValue * sqrt((meanErr/cos[0])*(meanErr/cos[0]) + (ampErr/cos[1])*(ampErr/cos[1]));
@@ -104,15 +117,30 @@ void drawRadii(
                             eps[iq2Mult]->SetPointError(i,0,fabs(epsErr));
                             eps[iq2Mult]->SetNameTitle(epsName.Data(),epsName.Data());
                         }
+
+                        // Do Rl
+                        if(iParams == 2)
+                        {
+                            Rl[iq2Mult]->SetPoint(i,i+1,cos[0]);
+                            Double_t meanErr = fCompsCos[i][0]->GetErrorY(0);
+                            Rl[iq2Mult]->SetPointError(i,0,fabs(meanErr));
+                            Rl[iq2Mult]->SetNameTitle(RlName.Data(),RlName.Data());
+                        }
                         
                     }
 
                     eps[iq2Mult]->SetNameTitle(epsName.Data(),epsName.Data());
 
-                    if( (iZdc==0) && (iq2Mult==0) && (i==0) ) { radiiCanvas->Print("auauRadii.pdf("); }
-                    else if ( (iZdc==(nZdcBins - 1)) && (iq2Mult==1) && (i==(nQ2MultBins - 1)) ) { radiiCanvas->Print("auauRadii.pdf)"); }
-                    else { radiiCanvas->Print("auauRadii.pdf"); }
+                    TString radiiCanvasName;
+                    if( (iZdc==0) && (iq2Mult==0) && (i==0) ) {
+                        radiiCanvasName = TString::Format("%sRadii.pdf(", base.Data());
+                    } else if ( (iZdc==(nZdcBins - 1)) && (iq2Mult==1) && (i==(nQ2MultBins - 1)) ) {
+                        radiiCanvasName = TString::Format("%sRadii.pdf)", base.Data());
+                    } else {
+                        radiiCanvasName = TString::Format("%sRadii.pdf", base.Data());
+                    }
 
+                    radiiCanvas->Print(radiiCanvasName.Data());
                     delete radiiCanvas;
                 } // if theDirectory exists
             } // loop over q2/mult bins
@@ -120,22 +148,28 @@ void drawRadii(
             outFile->cd();
             TString f2CanvasName, f0CanvasName;
             if(!iq2Mult) {
-                f0CanvasName = TString::Format("auau - f0 - Zdc: %d - q2", iZdc);
-                f2CanvasName = TString::Format("auau - f2 - Zdc: %d - q2", iZdc);
+                f0CanvasName = TString::Format("%s - f0 - Zdc: %d - q2",base.Data(), iZdc);
+                f2CanvasName = TString::Format("%s - f2 - Zdc: %d - q2",base.Data(), iZdc);
             } else {
-                f0CanvasName = TString::Format("auau - f0 - Zdc: %d - mult", iZdc);
-                f2CanvasName = TString::Format("auau - f2 - Zdc: %d - mult", iZdc);
+                f0CanvasName = TString::Format("%s - f0 - Zdc: %d - mult",base.Data(), iZdc);
+                f2CanvasName = TString::Format("%s - f2 - Zdc: %d - mult",base.Data(), iZdc);
             }
 
             f0Canvas = makeF0Canvas(f0,f0CanvasName, f0CanvasName);
             f2Canvas = makeF2Canvas(f2,f2CanvasName, f2CanvasName);
+            TString f0Name, f2Name;
             if( (iZdc==0) && (iq2Mult==0) ) {
-                f0Canvas->Print("auauf0.pdf("); f2Canvas->Print("auauf2.pdf(");
+                f0Name = TString::Format("%sf0.pdf(",base.Data());
+                f2Name = TString::Format("%sf2.pdf(",base.Data());
             } else if ( (iZdc==(nZdcBins - 1)) && (iq2Mult==1) ) {
-                f0Canvas->Print("auauf0.pdf)"); f2Canvas->Print("auauf2.pdf)");
+                f0Name = TString::Format("%sf0.pdf)",base.Data());
+                f2Name = TString::Format("%sf2.pdf)",base.Data());
             } else { 
-                f0Canvas->Print("auauf0.pdf"); f2Canvas->Print("auauf2.pdf");
+                f0Name = TString::Format("%sf0.pdf",base.Data());
+                f2Name = TString::Format("%sf2.pdf",base.Data());
             }
+            f0Canvas->Print(f0Name.Data());
+            f2Canvas->Print(f2Name.Data());
 
             eps[iq2Mult]->Write();
             f0[2]->SetNameTitle(RlName.Data(),RlName.Data());
@@ -159,7 +193,7 @@ TCanvas* makeRadiiCanvas(TDirectory* theDirectory, TGraphErrors** params, TStrin
     TCanvas* canvas = new TCanvas(canvasName.Data(),canvasName.Data());
     canvas->Divide(3,2);
 
-    Float_t yAxisRange[6][2] = {{24, 36}, {17, 29}, {27, 39}, {-4, 4}, {0.4, 0.5}, {0.12, .16}};
+    Float_t yAxisRange[6][2] = {{24, 36}, {17, 29}, {27, 39}, {-4, 4}, {0.4, 0.5}, {0.10, .14}};
     // Float_t yAxisRange[6][2] = {{24, 36}, {17, 29}, {27, 39}, {-4, 4}, {0.4, 0.5}, {.115, .122}};
 
     for (Int_t i = 0; i <= 5; ++i)
