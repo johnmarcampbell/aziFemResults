@@ -1,6 +1,7 @@
 const TH3D* hNum;
 const TH3D* hDen;
 const TH3D* hCoul;
+TH3D* hCorrFunction;
 TMinuit* tmFit;
 Int_t loBin;
 Int_t hiBin;
@@ -8,6 +9,8 @@ Int_t hiBin;
 Double_t cfTheory(const Double_t* fitPars, Double_t qx, Double_t qy, Double_t qz, Double_t coul);
 void logLikelihoodWrapper(int &npar, double *gin, double &f, double *par, int iflag);
 void logLikelihood(double &f, double *par);
+void chiSquareWrapper(int &npar, double *gin, double &f, double *par, int iflag);
+void chiSquare(double &f, double *par);
 void makeFitNumerator(TH3D* fitNum, const TH3D* den, const TH3D* coul, const Double_t* fitPars);
 TGraph* scanDistribution(Double_t* pars, const Double_t scanFraction, const Int_t nPar);
 TGraph* scanNewDistribution(Double_t* pars, const Double_t scanFraction, const Int_t nPar);
@@ -37,6 +40,11 @@ void fit(
     hCoul = pCoul;
     tmFit = pFit;
 
+    // --- Make the Experimental correlation function --- //
+    hCorrFunction = new TH3D(*hNum);
+    hCorrFunction->SetNameTitle("ExpCorrFunction", "ExpCorrFunction");
+    hCorrFunction->Divide(hDen);
+
     //Determine loBin and hiBin
 	Int_t nBin = hNum->GetNbinsX();
 	loBin = hNum->GetXaxis()->FindBin(-1.*fitRange);
@@ -47,6 +55,7 @@ void fit(
     // Double_t initRange[8] = {0.1, 0, 3, 3, 3, 1, 0, 0};
     Double_t initRange[8] = {0.1, 0.1, 3, 3, 3, 1, 0, 0};
     TString parNames[8] = {"Normalization" , "Lambda", "RoutSquared", "RsideSquared", "RlongSquared", "RoutsideSquared", "RoutlongSquared", "RsidelongSquared"};
+    // tmFit->SetFCN(chiSquareWrapper);
     tmFit->SetFCN(logLikelihoodWrapper);
     for (Int_t i = 0; i <= 7; ++i) { tmFit->DefineParameter(i, parNames[i].Data(), initPars[i], initRange[i], 0, 0); }
 
@@ -63,7 +72,7 @@ void fit(
 	}
 	while ( (ierflg != 0) && (fitLoop != 50) );
 
-    tmFit->mnexcm("MINOS",arglist,0,ierflg);
+    // tmFit->mnexcm("MINOS",arglist,0,ierflg);
 
     // ---- Find Error Contours ---- //
     Int_t n = 0;
@@ -300,19 +309,57 @@ TGraph* scanDistribution(Double_t* pars, const Double_t scanFraction, const Int_
     Double_t stepSize = pars[nPar] * scanFraction / nPoints;
 
     Double_t offset = 0;
-    logLikelihood(offset, pars);
+    chiSquare(offset, pars);
 
 
     for (Int_t i = 0; i <= (nPoints - 1); i++)
     {
         pars[nPar] = min + i*stepSize;
-        logLikelihood(tempValue, pars);
+        chiSquare(tempValue, pars);
         distPointsX[i] = min + i*stepSize;
-        distPointsY[i] = tempValue - offset;
+        distPointsY[i] = tempValue;
     }
+    
 
     TGraph* gr = new TGraph(nPoints, distPointsX, distPointsY);
 
     return gr;
 
+}
+
+void chiSquareWrapper(int &npar, double *gin, double &f, double *par, int iflag) 
+{
+    chiSquare(f, par);
+}
+
+void chiSquare(double &f, double *par) 
+{
+	Float_t qx, qy, qz;
+    Double_t c, e, t, k; // (c)orrelation function, (e)rror, (t)heory, (k)oulomb
+
+	f = 0.;
+	
+	for (Int_t x = loBin; x <= hiBin; x++) 
+	{
+        for (Int_t y = loBin; y <= hiBin; y++) 
+		{
+            for (Int_t z = loBin; z <= hiBin; z++) 
+			{
+                qx = hNum->GetXaxis()->GetBinCenter(x);
+                qy = hNum->GetYaxis()->GetBinCenter(y);
+				qz = hNum->GetZaxis()->GetBinCenter(z);
+
+				c =  hCorrFunction->GetBinContent(x,y,z);
+                e = hCorrFunction->GetBinError(x,y,z);
+                k = hCoul->GetBinContent(x,y,z);
+
+                t = par[0] * cfTheory(par, qx, qy, qz, k);
+                f += pow( ((t - c) / e) , 2);
+                // if (f < 1) {
+                //     cout << t << " " << c << " " << e << endl;
+                // }
+			} // z bins
+		} // y bins
+	} // x bins
+    // cout << f << " " << par[0] << " " << par[1] << " " << par[2] << " " << par[3] << " " << par[4] << " " << par[5] << endl;
 }
