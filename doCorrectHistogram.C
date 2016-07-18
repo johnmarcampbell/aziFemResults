@@ -58,7 +58,8 @@ void correctHistogram(TH3D** exp, TH3D** corr, const Double_t res)
     for(Int_t i = 0; i <= (nPhiBins - 1); i++)
     {
         TString corrName(exp[i]->GetName());
-//        corrName += "_corrected";
+        TString newExpName = TString::Format("%s_%i", exp[i]->GetName(), i);
+        exp[i]->SetName(newExpName.Data());
         corr[i] = new TH3D(corrName.Data(),corrName.Data(),nqBins,qLow,qHigh,nqBins,qLow,qHigh,nqBins,qLow,qHigh);
         corr[i]->Sumw2();
     }
