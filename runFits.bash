@@ -8,7 +8,8 @@ zdcBin=$7
 
 root -b -q 'doCorrectHistogram.C("'$rawFile'","'$correctedFile'",'$resolution')'
 # for((i=0; i <= 0; i++))
-for((i=0; i <= 7; i++))
-do
-    root -b -q 'fitManager.C("'$correctedFile'","'$fitFile'", '$zdcBin', 0, '$q2OrMult', '$q2MultBin', '$i')'
-done
+# for((i=0; i <= 7; i++))
+# do
+#     # root -b -q 'fitManager.C("'$correctedFile'","'$fitFile'", '$zdcBin', 0, '$q2OrMult', '$q2MultBin', '$i')'
+#     root -b -q 'fitManager.C("'$rawFile'","'$fitFile'", '$zdcBin', 0, '$q2OrMult', '$q2MultBin', '$i')'
+# done

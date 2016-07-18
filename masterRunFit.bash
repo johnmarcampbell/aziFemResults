@@ -1,4 +1,4 @@
-auauOrUu=1
+auauOrUu=0
 q2OrMult=1
 zdcBin=1
 
@@ -31,17 +31,17 @@ echo $binDirectory
 # declare -a res=(0.425452 0.424873 0.420491 0.41498 0.406762) # U - 0.0% to 0.25% - mult
 # declare -a res=(0.261268 0.265055 0.264835 0.272727 0.282356) # Au - 0.0% to 0.5% - q2
 # declare -a res=(0.336164 0.336912 0.343711 0.349486 0.372916) # U - 0.0% to 0.5% - q2
-# declare -a res=(0.338668 0.330646 0.330272 0.327157 0.329236) # Au - 0.0% to 0.5% - mult
+declare -a res=(0.338668 0.330646 0.330272 0.327157 0.329236) # Au - 0.0% to 0.5% - mult
 # declare -a res=(0.426443 0.424254 0.422858 0.420137 0.41072) # U - 0.0% to 0.5% - mult
-declare -a res=(1 1 1 1 1) # Dummy res 
+# declare -a res=(1 1 1 1 1) # Dummy res 
 
-# for((i=2; i <= 2; i++))
-for((i=0; i <= 4; i++))
+for((i=2; i <= 2; i++))
+# for((i=0; i <= 4; i++))
 do
     inFile=$dataDirectory/$binDirectory/${species}_${tag}_$i.root
-    correctedFile=$dataDirectory/$binDirectory/${species}_${tag}_${i}_Corrected.root
+    correctedFile=$dataDirectory/$binDirectory/${species}_${tag}_${i}_CorrectedTest.root
     # fitFile=$dataDirectory/$binDirectory/${species}_${tag}_${i}_Fit.root
-    fitFile=$dataDirectory/$binDirectory/${species}_${tag}_${i}_Fit.root
+    fitFile=$dataDirectory/$binDirectory/${species}_${tag}_${i}_FitNoResTest.root
     logFile=$dataDirectory/$binDirectory/${species}_${tag}_${i}.log
 
     ( ./runFits.bash $inFile $correctedFile $fitFile ${res[$i]} $q2OrMult $i $zdcBin >& $logFile & )
